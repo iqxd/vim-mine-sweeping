@@ -6,6 +6,7 @@ let s:blanks = []  "use dict may be better
 
 " can use append（linenumber，List[linetext]）
 function! s:create_board()
+    set modifiable
 	let row = s:nrow
 	let col = s:ncol 
     let topboarder = "╭" .. repeat("───┬",col-1) .. "───╮"
@@ -21,7 +22,35 @@ function! s:create_board()
 
     let botboarder = "╰" .. repeat("───┴",col-1) .. "───╯"
     call append(line('$'),botboarder)
+    set nomodifiable
 endfunction
+
+function! s:get_board_pos_from_window_pos(wline,wvcol)
+    " wvcol should be virtcol number
+    let loffset =  (a:wline - s:startline) % 2 
+    if loffset == 0
+        let grow = (a:wline- s:startline) / 2 - 1
+    else 
+        " screen pos on gird line not in cell
+        return [-1,-1]
+    endif
+    let voffset = (a:wvcol - 1)%4
+    if voffset > 0 
+        let l:gcol = (a:wvcol-1)/4
+        return [grow,gcol]
+    else 
+        " screen pos on gird line not in cell
+        return [-1,-1] 
+    endif
+endfunction
+
+function! s:get_window_pos_from_board_pos(grow,gcol)
+    let wline = (a:grow + 1) * 2 + s:startline
+    let wvcol = (a:gcol * 4) + 3 
+    " wvcol is virtcol number
+    return [wline,wvcol]
+endfunction
+
 
 function! s:get_cell_pos()
     let cline = line('.')
@@ -82,45 +111,54 @@ function! s:count_mine()
     endfor
 endfunction
 
-function! s:reveal_cell(isflag)
-    " ci is virtual col numbe
-    let [l,vc] = s:get_cell_pos()
-    " echom [l,c]
-    if [l,vc]!=[0,0]
-        let crow = (l-s:startline)/2-1
-        let ccol = (vc-3)/4 
-        let label = s:board[crow][ccol]
-        if a:isflag == 1
-            let cell = ' + '
-        elseif label == -1
-            let cell = ' * '
-        elseif label == 0
-            let cell = ' - '
-            call add(s:blanks,[crow,ccol])
-            call s:reveal_blank(crow,ccol)
-            for [br,bc] in s:blanks
-                let bl = (br+1)*2+s:startline
-                let vcol = bc*4+3
-                let curbline = getline(bl)
-                let blabel =s:board[br][bc]
-                let bcell = blabel == 0 ? ' - ' : ' '..blabel..' '
-                let newbline = strcharpart(curbline,0,vcol-2)..bcell..strcharpart(curbline,vcol+1)
-                call setline(bl,newbline)
-            endfor
-            let s:blanks = []
-        else
-            let cell = ' '..label..' '
-        endif
-        let curline = getline(l)
-        let curcell = strcharpart(curline,vc-2,3)
-        " cancel click
-        if a:isflag == 1 && curcell == ' + '
-            let cell = '   '
-        endif
-        let newline = strcharpart(curline,0,vc-2)..cell..strcharpart(curline,vc+1)
-        call setline(l,newline)
-        
+function! s:get_cell(grow,gcol)
+    let [wline,wvcol] = s:get_window_pos_from_board_pos(a:grow,a:gcol)
+    return strcharpart(getline(wline),wvcol-2,3)
+endfunction
 
+function! s:replace_cell(grow,gcol,newcell)
+    let [wline,wvcol] = s:get_window_pos_from_board_pos(a:grow,a:gcol)
+    let curtext = getline(wline)
+    let newtext = strcharpart(curtext,0,wvcol-2) .. a:newcell .. strcharpart(curtext,wvcol+1)
+    call setline(wline,newtext)
+endfunction
+
+function! s:reveal_cell(flag)
+    let wline = line('.')
+    let wvcol = virtcol('.')
+    let [grow,gcol] = s:get_board_pos_from_window_pos(wline,wvcol)
+    if grow !=-1 && gcol != -1 
+        set modifiable
+        let label = s:board[grow][gcol]
+        let curcell = s:get_cell(grow,gcol)
+        if a:flag == 1
+            if curcell == '   '
+                call s:replace_cell(grow,gcol,' + ')
+            elseif curcell == ' + '
+                call s:replace_cell(grow,gcol,'   ')
+            endif
+        elseif curcell == '   '
+            if label == -1
+                call s:replace_cell(grow,gcol,' * ')
+            elseif label == 0
+                call s:replace_cell(grow,gcol,' - ')
+                call add(s:blanks,[grow,gcol])
+                call s:reveal_blank(grow,gcol)
+                for [arow,acol] in s:blanks
+                    let alabel =s:board[arow][acol]
+                    let anewcell = alabel == 0 ? ' - ' : ' '..alabel..' '
+                    let acurcell = s:get_cell(arow,acol)
+                    if acurcell == '   ' || acurcell == ' + '
+                        call s:replace_cell(arow,acol,anewcell)
+                    endif
+                endfor
+                let s:blanks = []
+            else
+                let newcell = ' '..label..' '
+                call s:replace_cell(grow,gcol,newcell)
+            endif
+        endif
+        set nomodifiable
     endif
 endfunction
 
@@ -141,6 +179,17 @@ function! s:reveal_blank(l,c)
     endfor
 endfunction
 
+" for test
+function! PrintBoard()
+    set modifiable
+    let startline = s:startline + 2*s:nrow + 2
+    call setline(startline,"Show Board")
+    for i in range(s:nrow)
+        call append(line('$'),join(s:board[i],'.'))
+    endfor
+    set nomodifiable
+endfunction
+
 function! s:move_right() abort
     let linetext = getline('.')
     let maxcol = strdisplaywidth(linetext) 
@@ -150,7 +199,7 @@ function! s:move_right() abort
         if curcol+3 < maxcol
             return "w2l"
         else
-            return "\<nop>"
+            return "b2l"
         endif
     else
         return "2l"
@@ -159,14 +208,13 @@ endfunction
 
 function! s:move_left() abort
     let linetext = getline('.')
-    let maxcol = strdisplaywidth(linetext) 
     let curcol = virtcol('.')
     let curchar = strcharpart(linetext,curcol-1,1)
     if curchar == ' ' 
         if curcol > 4
             return "b2h"
         else
-            return "\<nop>"
+            return "w2h"
         endif
     else
         return "2h"
@@ -178,13 +226,13 @@ function! s:move_down() abort
     let rlineno = lineno-s:startline
     if rlineno % 2 == 1 
         if rlineno >= 2*s:nrow + 1  
-            return "\<nop>"
+            return "k"
         else
             return "j"
         endif
     else
         if rlineno >= 2*s:nrow
-            return "\<nop>"
+            return "jk"
         else
             return "2j"
     endif
@@ -195,13 +243,13 @@ function! s:move_up() abort
     let rlineno = lineno-s:startline
     if rlineno % 2 == 1 
         if rlineno <= 1 
-            return "\<nop>"
+            return "j"
         else
             return "k"
         endif
     else
         if rlineno <= 2
-            return "\<nop>"
+            return "kj"
         else
             return "2k"
     endif
@@ -209,8 +257,7 @@ endfunction
  
 function! s:start_game()
     vnew 
-    " should add modifiable nomodifiable when write
-    setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile 
+    setlocal buftype=nofile bufhidden=wipe nobuflisted nomodifiable nolist noswapfile 
              \ nowrap nocursorline nocursorcolumn nospell
     setfiletype mineswp
     let s:startline = line('$')
@@ -248,3 +295,4 @@ endfunction
 if !exists(":MineSweep")
     command -nargs=* MineSweep :call mineswp#start(<f-args>)
 endif
+
