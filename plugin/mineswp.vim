@@ -9,8 +9,8 @@ function! s:create_board()
     set modifiable
 	let row = s:nrow
 	let col = s:ncol 
-    let topboarder = "╭" .. repeat("───┬",col-1) .. "───╮"
-    call append(line('$'),topboarder)
+    let topline = "╭" .. repeat("───┬",col-1) .. "───╮"
+    call append(line('$'),topline)
 
     let  labelrow = "" .. repeat("│   ",col) .. "│"
     let  linerow  = "├" .. repeat("───┼",col-1) .. "───┤"
@@ -20,8 +20,8 @@ function! s:create_board()
     endfor
     call append(line('$'),labelrow)
 
-    let botboarder = "╰" .. repeat("───┴",col-1) .. "───╯"
-    call append(line('$'),botboarder)
+    let botline = "╰" .. repeat("───┴",col-1) .. "───╯"
+    call append(line('$'),botline)
     set nomodifiable
 endfunction
 
@@ -49,28 +49,6 @@ function! s:get_window_pos_from_board_pos(grow,gcol)
     let wvcol = (a:gcol * 4) + 3 
     " wvcol is virtcol number
     return [wline,wvcol]
-endfunction
-
-
-function! s:get_cell_pos()
-    let cline = line('.')
-    let chridx = virtcol('.')-1
-    let curline = getline('.')
-    let cell1 = strcharpart(curline,chridx-2,3)
-    let cell2 = strcharpart(curline,chridx-1,3)
-    let cell3 = strcharpart(curline,chridx,3) 
-    if cell1 =~ '\v\s[ \+]\s' 
-        " echom "cell1"
-        return [cline,chridx]
-    elseif  cell2 =~ '\v\s[ \+]\s' 
-        " echom "cell2"
-        return [cline,chridx+1]
-    elseif cell3 =~ '\v\s[ \+]\s'
-        " echom "cell3"
-        return [cline,chridx+2]
-    else
-        return [0,0]
-    endif
 endfunction
 
 function! s:get_rand_int(Low, High) abort
