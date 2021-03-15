@@ -2,21 +2,26 @@ if exists("b:current_syntax")
     finish
 endif
 
-hi Grid   gui=bold guifg=DarkCyan
-hi Label  gui=bold guifg=black guibg=Gray 
-hi Flag   gui=bold guifg=black guibg=LightGreen
-hi Mine   gui=bold guifg=black guibg=red
+hi Grid   gui=bold guifg=Grey ctermfg=Grey
+hi Flag   gui=bold guifg=Black guibg=Green ctermfg=Black ctermbg=Green
+hi Mine   gui=bold guifg=Black guibg=Red ctermfg=Black ctermbg=Red
 hi Blank  gui=bold
 hi Button gui=bold 
 
-hi Label1 gui=bold guifg=blue guibg=Gray 
-hi Label2 gui=bold guifg=orange guibg=Gray 
-hi Label3 gui=bold guifg=yellow guibg=Gray 
-hi Label4 gui=bold guifg=violet guibg=Gray 
-hi Label5 gui=bold guifg=green guibg=Gray 
-hi Label6 gui=bold guifg=brown guibg=Gray 
-hi Label7 gui=bold guifg=cyan guibg=Gray 
-hi Label8 gui=bold guifg=pink guibg=Gray 
+hi Label1 gui=bold guifg=DarkRed guibg=Gray ctermfg=DarkRed ctermbg=Gray  
+hi Label2 gui=bold guifg=DarkBlue guibg=Gray ctermfg=DarkBlue ctermbg=Gray  
+hi Label3 gui=bold guifg=DarkYellow guibg=Gray ctermfg=DarkYellow ctermbg=Gray  
+hi Label4 gui=bold guifg=Purple guibg=Gray ctermfg=Magenta ctermbg=Gray  
+hi Label5 gui=bold guifg=LightRed guibg=Gray ctermfg=LightRed ctermbg=Gray  
+hi Label6 gui=bold guifg=Cyan guibg=Gray ctermfg=DarkCyan ctermbg=Gray  
+hi Label7 gui=bold guifg=Yellow guibg=Gray ctermfg=Yellow ctermbg=Gray  
+hi Label8 gui=bold guifg=White guibg=Gray ctermfg=White ctermbg=Gray  
+
+hi LogoLabel guifg=Gray ctermfg=Gray
+hi TitleLabel gui=bold guifg=Gray ctermfg=Gray
+hi WinLabel gui=bold guibg = Green ctermbg=Green
+hi LoseLabel gui=bold guibg = Red ctermbg=Red
+hi ScoreLabel gui=bold guifg=Gray ctermfg=Gray
 
 syn match GridLine '│'
 syn match GridLine '╭'
@@ -61,12 +66,6 @@ hi link ButtonCell Button
 syn match BlankCell '\v\s\-\s'
 hi link BlankCell Blank
 
-hi LogoLabel guifg=DarkCyan
-hi TitleLabel gui=bold guifg=DarkCyan
-hi WinLabel gui=bold guibg = Green 
-hi LoseLabel gui=bold guibg = Red 
-hi ScoreLabel gui=bold guifg=DarkCyan
-
 syn match GameLogo '✠✠✠'
 hi link GameLogo LogoLabel
 syn match GameTitle '\vVim Mine Sweeping'
@@ -78,4 +77,4 @@ hi link GameLose LoseLabel
 syn match Score '\vScore:\d+'
 hi link Score ScoreLabel
 
-let b:current_syntax = "potion"
+let b:current_syntax = "mineswp"
