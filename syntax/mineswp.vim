@@ -61,4 +61,21 @@ hi link ButtonCell Button
 syn match BlankCell '\v\s\-\s'
 hi link BlankCell Blank
 
+hi LogoLabel guifg=DarkCyan
+hi TitleLabel gui=bold guifg=DarkCyan
+hi WinLabel gui=bold guibg = Green 
+hi LoseLabel gui=bold guibg = Red 
+hi ScoreLabel gui=bold guifg=DarkCyan
+
+syn match GameLogo '✠✠✠'
+hi link GameLogo LogoLabel
+syn match GameTitle '\vVim Mine Sweeping'
+hi link GameTitle TitleLabel
+syn match GameWin '\v     You Win!    '
+hi link GameWin WinLabel
+syn match GameLose '\v     You Lose    '
+hi link GameLose LoseLabel
+syn match Score '\vScore:\d+'
+hi link Score ScoreLabel
+
 let b:current_syntax = "potion"
