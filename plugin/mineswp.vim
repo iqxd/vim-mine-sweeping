@@ -4,9 +4,8 @@ let s:win = '     You Win!    '
 let s:lose = '     You Lose    '
 let s:result = 'Score:'
 
-" can use append（linenumber，List[linetext]）
 function! s:create_board()
-    set modifiable
+    setlocal modifiable
     normal! gg_dG
     call setline(1,printf("%s   %s   %s%d",s:logo,s:title,s:result,b:score))
     call append(line('$'),'')
@@ -27,7 +26,7 @@ function! s:create_board()
 
     let botline = "╰" .. repeat("───┴",ncol-1) .. "───╯"
     call append(line('$'),botline)
-    set nomodifiable
+    setlocal nomodifiable
     " set cursor initial postion
     let [iline,ivcol] = s:get_window_pos_from_board_pos((b:nrow-1)/2,(b:ncol-1)/2)
     let bytescol = strlen(strcharpart(getline(iline),0,ivcol))
@@ -77,11 +76,11 @@ function! s:create_mine()
         endif
 	endfor
     let mines = mines[:b:nmine-1]
-    echom "init mines = "..b:nmine
+    " echom "init mines = "..b:nmine
 
     " reset the real b:nmine
     let b:nmine = len(mines)
-    echom "real mines = "..b:nmine
+    " echom "real mines = "..b:nmine
 	for i in range(b:nrow)
         call add(b:board,[])
 		for j in range(b:ncol)
@@ -125,7 +124,7 @@ function! s:reveal_cell(flag)
     let wvcol = virtcol('.')
     let [grow,gcol] = s:get_board_pos_from_window_pos(wline,wvcol)
     if grow !=-1 && gcol != -1 
-        set modifiable
+        setlocal modifiable
         let label = b:board[grow][gcol]
         let curcell = s:get_cell(grow,gcol)
         if a:flag == 1
@@ -170,7 +169,7 @@ function! s:reveal_cell(flag)
                 endif
             endif 
         endif
-        set nomodifiable
+        setlocal nomodifiable
     endif
 endfunction
 
@@ -199,18 +198,17 @@ function! s:new_game()
     call s:count_mine()
     call s:create_board()
     let b:start = 1
-    call PrintBoard()
 endfunction
 
 " for test
 function! PrintBoard()
-    set modifiable
+    setlocal modifiable
     let startline = b:startline + 2*b:nrow + 2
     call setline(startline,"Show Board")
     for i in range(b:nrow)
         call append(line('$'),join(b:board[i],'.'))
     endfor
-    set nomodifiable
+    setlocal nomodifiable
 endfunction
 
 function! s:move_right() abort
