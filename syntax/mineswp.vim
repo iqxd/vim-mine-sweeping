@@ -23,8 +23,8 @@ hi WinLabel gui=bold guibg = Green ctermbg=Green
 hi LoseLabel gui=bold guibg = Red ctermbg=Red
 
 hi HelpLabel guifg =Gray ctermfg=Gray
-hi ActionName gui=bold guibg=DarkGreen
-hi ActionKey gui=bold guifg=Gray
+hi ActionName gui=bold guibg=DarkGreen ctermbg=DarkGreen
+hi ActionKey gui=bold guifg=Gray ctermfg=Gray
 
 syn match GridLine '│'
 syn match GridLine '╭'
