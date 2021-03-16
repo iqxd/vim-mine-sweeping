@@ -18,10 +18,13 @@ hi Label7 gui=bold guifg=Yellow guibg=Gray ctermfg=Yellow ctermbg=Gray
 hi Label8 gui=bold guifg=White guibg=Gray ctermfg=White ctermbg=Gray  
 
 hi LogoLabel guifg=Gray ctermfg=Gray
-hi TitleLabel gui=bold guifg=Gray ctermfg=Gray
+hi TitleLabel gui=bold guibg=Gray ctermbg=Gray
 hi WinLabel gui=bold guibg = Green ctermbg=Green
 hi LoseLabel gui=bold guibg = Red ctermbg=Red
-hi ScoreLabel gui=bold guifg=Gray ctermfg=Gray
+
+hi HelpLabel guifg =Gray ctermfg=Gray
+hi ActionName gui=bold guibg=DarkGreen
+hi ActionKey gui=bold guifg=Gray
 
 syn match GridLine '│'
 syn match GridLine '╭'
@@ -66,15 +69,27 @@ hi link ButtonCell Button
 syn match BlankCell '\v\s\-\s'
 hi link BlankCell Blank
 
-syn match GameLogo '✠✠✠'
+syn match GameLogo '✠'
 hi link GameLogo LogoLabel
-syn match GameTitle '\vVim Mine Sweeping'
+syn match GameTitle '\v\sVim Mine Sweeping  Score:\d+\s'
 hi link GameTitle TitleLabel
-syn match GameWin '\v     You Win!    '
+syn match GameWin '\v\sYou Win!  Score:\d+\s'
 hi link GameWin WinLabel
-syn match GameLose '\v     You Lose    '
+syn match GameLose '\v\sYou Lose  Score:\d+\s'
 hi link GameLose LoseLabel
-syn match Score '\vScore:\d+'
-hi link Score ScoreLabel
+
+syn match HelpLine '\v\-.+\-'
+hi link HelpLine HelpLabel
+syn match GameAction '\v\[.+\]'
+hi link GameAction ActionName
+syn keyword KeyMap h j k l c f ng
+hi link KeyMap ActionKey
+syn match SKeyMap '←'
+syn match SKeyMap '↓'
+syn match SKeyMap '↑'
+syn match SKeyMap '→'
+syn match SKeyMap '<2-leftmouse>'
+syn match SkeyMap '<rightmouse>'
+hi link SKeyMap ActionKey
 
 let b:current_syntax = "mineswp"
