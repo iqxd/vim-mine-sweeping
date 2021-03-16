@@ -1,21 +1,31 @@
-let s:logo = '✠✠✠'
-let s:title = 'Vim Mine Sweeping'
-let s:win = '     You Win!    '
-let s:lose = '     You Lose    '
-let s:result = 'Score:'
+let s:logo = '✠'
+let s:title = 'Vim Mine Sweeping  Score:'
+let s:win = 'You Win!  Score:'
+let s:lose = 'You Lose  Score:'
+let s:help = 'Toggle Help : ?'
+let s:help1 = '[Move]    : h j k l or ← ↓ ↑ →'
+let s:help2 = '[Reveal]  : c or <2-leftmouse>'
+let s:help3 = '[Flag]    : f or <rightmouse>'
+let s:help4 = '[NewGame] : ng'
 
 function! s:create_board()
     setlocal modifiable
     normal! gg_dG
-    call setline(1,printf("%s   %s   %s%d",s:logo,s:title,s:result,b:score))
-    call append(line('$'),'')
-    let b:startline = line('$')
 
     let nrow = b:nrow
 	let ncol = b:ncol 
     let topline = "╭" .. repeat("───┬",ncol-1) .. "───╮"
-    call append(line('$'),topline)
 
+    let b:boardwidth = strdisplaywidth(topline)
+
+    " add title line
+    call append(line('$'),'')
+    let b:titleline = line('$')
+    call s:update_title(s:title,0)
+    call append(line('$'),'')
+    let b:startline = line('$')
+
+    call append(line('$'),topline)
     let  labelrow = "" .. repeat("│   ",ncol) .. "│"
     let  linerow  = "├" .. repeat("───┼",ncol-1) .. "───┤"
     for _ in range(nrow-1)
@@ -26,11 +36,43 @@ function! s:create_board()
 
     let botline = "╰" .. repeat("───┴",ncol-1) .. "───╯"
     call append(line('$'),botline)
-    setlocal nomodifiable
+
     " set cursor initial postion
     let [iline,ivcol] = s:get_window_pos_from_board_pos((b:nrow-1)/2,(b:ncol-1)/2)
     let bytescol = strlen(strcharpart(getline(iline),0,ivcol))
     call cursor(iline,bytescol)
+    
+    " add help line
+    call append(line('$'),'')
+    let b:helpline = line('$') + 1
+    call s:set_helpline()
+
+    setlocal nomodifiable
+endfunction
+
+function! s:update_title(text,score)
+    let title = printf("%s  %s%d  %s",s:logo,a:text,a:score,s:logo)
+    let titlewidth = strdisplaywidth(title)
+    if titlewidth >= b:boardwidth
+        call setline(b:titleline,title)
+    else
+        let rest = b:boardwidth - titlewidth
+        let fills = repeat(s:logo,rest/2)
+        call setline(b:titleline,fills..title..fills)
+    endif
+endfunction
+
+function! s:set_helpline()
+    let fillchar = '-'
+    let helptext = printf("%s  %s  %s",fillchar,s:help,fillchar)
+    let helpwidth = strdisplaywidth(helptext)
+    if helpwidth > b:boardwidth
+        call setline(b:helpline,helptext)
+    else
+        let rest = b:boardwidth - helpwidth
+        let fills = repeat(fillchar,rest/2)
+        call setline(b:helpline,fills..helptext..fills)
+    endif
 endfunction
 
 function! s:get_board_pos_from_window_pos(wline,wvcol)
@@ -137,7 +179,8 @@ function! s:reveal_cell(flag)
             if label == -1
                 call s:replace_cell(grow,gcol,' * ')
                 if b:start == 1
-                    call setline(1,printf("%s   %s   %s%d",s:logo,s:lose,s:result,b:score))
+                    " call setline(1,printf("%s   %s   %s%d",s:logo,s:lose,s:result,b:score))
+                    call s:update_title(s:lose,b:score)
                     let b:start = 0
                 endif
             elseif label == 0
@@ -162,10 +205,12 @@ function! s:reveal_cell(flag)
             endif
             if b:start== 1 
                 if b:score == b:nrow*b:ncol-b:nmine
-                    call setline(1,printf("%s   %s   %s%d",s:logo,s:win,s:result,b:score))
+                    " call setline(1,printf("%s   %s   %s%d",s:logo,s:win,s:result,b:score))
+                    call s:update_title(s:win,b:score)
                     let b:start=0
                 else
-                    call setline(1,printf("%s   %s   %s%d",s:logo,s:title,s:result,b:score))
+                    " call setline(1,printf("%s   %s   %s%d",s:logo,s:title,s:result,b:score))
+                    call s:update_title(s:title,b:score)
                 endif
             endif 
         endif
@@ -203,8 +248,7 @@ endfunction
 " for test
 function! PrintBoard()
     setlocal modifiable
-    let startline = b:startline + 2*b:nrow + 2
-    call setline(startline,"Show Board")
+    call setline(line('$')+1,"Show Board")
     for i in range(b:nrow)
         call append(line('$'),join(b:board[i],'.'))
     endfor
@@ -253,66 +297,136 @@ endfunction
 
 function! s:move_down() abort
     let curline = line('.')
-    let [grow,gcol] = s:get_board_pos_from_window_pos(curline,virtcol('.')) 
+    let curvcol = virtcol('.')
+    let [grow,gcol] = s:get_board_pos_from_window_pos(curline,curvcol) 
     if grow == -1 && gcol == -1
         return "j"
-    elseif grow == s:nrow -1
-        return "kj"
     else
-        return "2j"
+        let [wline,newvcol] = s:get_window_pos_from_board_pos(grow,gcol)
+        if newvcol > curvcol
+            let rowmove = "l"
+        elseif newvcol < curvcol
+            let rowmove = "h"
+        else
+            let rowmove = ""
+        endif
+        if grow == b:nrow -1
+            return rowmove == "" ? "kj" : rowmove
+        else
+            return rowmove .. "2j"
+        endif
     endif
 endfunction
 
 function! s:move_up() abort
     let curline = line('.')
-    let [grow,gcol] = s:get_board_pos_from_window_pos(curline,virtcol('.')) 
+    let curvcol = virtcol('.')
+    let [grow,gcol] = s:get_board_pos_from_window_pos(curline,curvcol) 
     if grow == -1 && gcol == -1
         return "k"
-    elseif grow == 0
-        return "jk"
     else
-        return "2k"
+        let [wline,newvcol] = s:get_window_pos_from_board_pos(grow,gcol)
+        if newvcol > curvcol
+            let rowmove = "l"
+        elseif newvcol < curvcol
+            let rowmove = "h"
+        else
+            let rowmove = ""
+        endif
+        if grow == 0
+            return rowmove == "" ? "jk" : rowmove
+        else
+            return rowmove .. "2k"
+        endif
     endif
 endfunction
 
-function! s:start_game()
-    vnew 
+function s:toggle_help()
+    set modifiable
+    if line('$') == b:helpline
+        call append(line('$'),s:help1)
+        call append(line('$'),s:help2)
+        call append(line('$'),s:help3)
+        call append(line('$'),s:help4)
+    else
+        normal! ma
+        normal! G_d3k
+        normal! `a
+    endif
+    set nomodifiable
+endfunction
+
+function! s:start_game() 
     call s:init_setting()
     let b:nrow = s:nrow
     let b:ncol = s:ncol
-    let b:nmine = s:nrow*s:ncol *8/35
+    let b:nmine = s:nmine 
     call s:new_game()
     " echom b:board
-    " should avoid click mine in fisrt try , todo
+    " should avoid click mine in first try , todo
 endfunction
 
 function! s:init_setting()
     setlocal buftype=nofile bufhidden=wipe nobuflisted nomodifiable nolist noswapfile 
              \ nowrap nocursorline nocursorcolumn nospell
     setfiletype mineswp
-    nnoremap <silent> <buffer> <2-LeftMouse> :call <SID>reveal_cell(0)<cr>
-    nnoremap <silent> <buffer> <RightMouse> :call <SID>reveal_cell(1)<cr>
+    nnoremap <silent> <buffer> <2-leftmouse> :call <SID>reveal_cell(0)<cr>
+    nnoremap <silent> <buffer> <rightmouse> :call <SID>reveal_cell(1)<cr>
     nnoremap <silent> <buffer> c :call <SID>reveal_cell(0)<cr>
     nnoremap <silent> <buffer> f :call <SID>reveal_cell(1)<cr>
     nnoremap <silent> <buffer> ng :call <SID>new_game()<cr>
+    nnoremap <silent> <buffer> ? :call <SID>toggle_help()<cr>
 
     nnoremap <silent> <buffer> <expr> h <SID>move_left() 
     nnoremap <silent> <buffer> <expr> l <SID>move_right()
     nnoremap <silent> <buffer> <expr> j <SID>move_down()
     nnoremap <silent> <buffer> <expr> k <SID>move_up()
+    nnoremap <silent> <buffer> <expr> <left> <SID>move_left() 
+    nnoremap <silent> <buffer> <expr> <right> <SID>move_right()
+    nnoremap <silent> <buffer> <expr> <down> <SID>move_down()
+    nnoremap <silent> <buffer> <expr> <up> <SID>move_up()
 endfunction
 
-
 function! mineswp#start(...) abort
-    if a:0 == 2 && a:1 > 0 && a:1 <= 30 && a:2 > 0 && a:2 <= 50
+    if a:0 >=1 && a:1 ==? "easy"
+        let s:nrow = 9
+        let s:ncol = 9
+        let s:nmine = 10
+    elseif a:0 >=1 && a:1 ==? "medium"
+        let s:nrow = 16
+        let s:ncol = 16
+        let s:nmine = 40
+    elseif a:0 >=1 && a:1 ==? "hard"
+        let s:nrow = 24
+        let s:ncol = 24
+        let s:nmine = 99
+    elseif a:0 >= 2 && a:1 =~ '\d\+' && a:2 =~ '\d\+' && a:1 >= 1 && a:1 <= 50 && a:2 >= 1 && a:2 <= 50
         let s:nrow = str2nr(a:1)
         let s:ncol = str2nr(a:2)
+        let s:nmine = float2nr(s:nrow * s:ncol * 0.15)
     else 
-        let s:nrow = 14
-        let s:ncol = 25
+        let s:nrow = 12
+        let s:ncol = 20
+        let s:nmine = float2nr(s:nrow * s:ncol * 0.15)
+    endif
+
+    if a:0 != 0
+        let winloc = a:000[-1]
+        if winloc ==? '-n'    
+            new     " split window
+        elseif winloc ==? '-v'
+            vnew    " vsplit window
+        elseif winloc ==? '-t'
+            tabnew  " tabpage
+        elseif winloc ==? '-e'
+            enew    " current window
+        else
+            new     " default
+        endif
     endif
     call s:start_game()
 endfunction
+
 
 " nnoremap <silent> <script> <Plug>(MineSweep-Start) :call <SID>start_game()<cr>
 
