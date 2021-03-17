@@ -1,7 +1,7 @@
 let s:logo  = '*'
 let s:title = 'Vim Mine Sweeping  Score:'
-let s:win   = '     You Win!      Score:'
-let s:lose  = '     You Lose      Score:'
+let s:win   = 'You Won The Game!  Score:'
+let s:lose  = 'You Lost The Game  Score:'
 let s:help  = 'Toggle Help : ?'
 let s:help1 = "[Move]    : h j k l or <left> <down> <up> <right>"
 let s:help2 = '[Reveal]  : c or <2-leftmouse>'

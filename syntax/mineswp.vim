@@ -77,9 +77,9 @@ syn match GameLogo '*'
 hi link GameLogo LogoLabel
 syn match GameTitle '\v\*+\s+.*Mine.*:\d+\s+\*+'
 hi link GameTitle TitleLabel
-syn match GameWin '\v\*+\s+.*Win.*:\d+\s+\*+'
+syn match GameWin '\v\*+\s+.*Won.*:\d+\s+\*+'
 hi link GameWin WinLabel
-syn match GameLose '\v\*+\s+.*Lose.*:\d+\s+\*+'
+syn match GameLose '\v\*+\s+.*Lost.*:\d+\s+\*+'
 hi link GameLose LoseLabel
 
 syn match HelpLine '\v\-.*Help.*\-'
