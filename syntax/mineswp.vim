@@ -17,18 +17,18 @@ hi Label6 gui=bold guifg=Cyan guibg=Gray ctermfg=DarkCyan ctermbg=Gray
 hi Label7 gui=bold guifg=Yellow guibg=Gray ctermfg=Yellow ctermbg=Gray  
 hi Label8 gui=bold guifg=White guibg=Gray ctermfg=White ctermbg=Gray  
 
-hi LogoLabel guifg=Gray ctermfg=Gray
-hi TitleLabel gui=bold guibg=Gray ctermbg=Gray
-hi WinLabel gui=bold guibg = Green ctermbg=Green
-hi LoseLabel gui=bold guibg = Red ctermbg=Red
+hi LogoLabel gui=bold guifg=Gray ctermfg=Gray
+hi TitleLabel gui=bold guifg=Black guibg=Gray ctermfg=Black ctermbg=Gray
+hi WinLabel gui=bold guifg=Black guibg = Green ctermfg=Black ctermbg=Green
+hi LoseLabel gui=bold guifg=Black guibg = Red ctermfg=Black ctermbg=Red
 
-hi HelpLabel guifg =Gray ctermfg=Gray
-hi ActionName gui=bold guibg=DarkGreen ctermbg=DarkGreen
+hi HelpLabel gui=bold guifg =Gray ctermfg=Gray
+hi ActionName gui=bold guifg=Gray ctermfg=Gray
 hi ActionKey gui=bold guifg=Gray ctermfg=Gray
 
 syn match GridLine '│'
-syn match GridLine '╭'
 syn match GridLine '─'
+syn match GridLine '╭'
 syn match GridLine '╰'
 syn match GridLine '┬'
 syn match GridLine '┴'
@@ -37,6 +37,10 @@ syn match GridLine '╯'
 syn match GridLine '┼'
 syn match GridLine '├'
 syn match GridLine '┤'
+syn match GridLine '┌' 
+syn match GridLine '└'
+syn match GridLine '┐'
+syn match GridLine '┘'
 
 hi link GridLine Grid
 
@@ -69,16 +73,16 @@ hi link ButtonCell Button
 syn match BlankCell '\v\s\-\s'
 hi link BlankCell Blank
 
-syn match GameLogo '✠'
+syn match GameLogo '*'
 hi link GameLogo LogoLabel
-syn match GameTitle '\v\sVim Mine Sweeping  Score:\d+\s'
+syn match GameTitle '\v\*+\s+.*Mine.*:\d+\s+\*+'
 hi link GameTitle TitleLabel
-syn match GameWin '\v\sYou Win!  Score:\d+\s'
+syn match GameWin '\v\*+\s+.*Win.*:\d+\s+\*+'
 hi link GameWin WinLabel
-syn match GameLose '\v\sYou Lose  Score:\d+\s'
+syn match GameLose '\v\*+\s+.*Lose.*:\d+\s+\*+'
 hi link GameLose LoseLabel
 
-syn match HelpLine '\v\-.+\-'
+syn match HelpLine '\v\-.*Help.*\-'
 hi link HelpLine HelpLabel
 syn match GameAction '\v\[.+\]'
 hi link GameAction ActionName
@@ -88,8 +92,7 @@ syn match SKeyMap '←'
 syn match SKeyMap '↓'
 syn match SKeyMap '↑'
 syn match SKeyMap '→'
-syn match SKeyMap '<2-leftmouse>'
-syn match SkeyMap '<rightmouse>'
+syn match SKeyMap '\v\<.{-}\>'
 hi link SKeyMap ActionKey
 
 let b:current_syntax = "mineswp"
