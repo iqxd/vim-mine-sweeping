@@ -1,27 +1,27 @@
-let s:logo = '✠'
+let s:logo  = '*'
 let s:title = 'Vim Mine Sweeping  Score:'
-let s:win = 'You Win!  Score:'
-let s:lose = 'You Lose  Score:'
-let s:help = 'Toggle Help : ?'
-let s:help1 = '[Move]    : h j k l or ← ↓ ↑ →'
+let s:win   = '     You Win!      Score:'
+let s:lose  = '     You Lose      Score:'
+let s:help  = 'Toggle Help : ?'
+let s:help1 = "[Move]    : h j k l or <left> <down> <up> <right>"
 let s:help2 = '[Reveal]  : c or <2-leftmouse>'
 let s:help3 = '[Flag]    : f or <rightmouse>'
 let s:help4 = '[NewGame] : ng'
 
 function! s:create_board()
     setlocal modifiable
-    normal! gg_dG
+    silent! normal! gg_dG
+    call setline(1,'')
 
     let nrow = b:nrow
 	let ncol = b:ncol 
-    let topline = "╭" .. repeat("───┬",ncol-1) .. "───╮"
+    let topline = "┌" .. repeat("───┬",ncol-1) .. "───┐"
 
     let b:boardwidth = strdisplaywidth(topline)
 
     " add title line
-    call append(line('$'),'')
-    let b:titleline = line('$')
-    call s:update_title(s:title,0)
+    let b:titleline = line('$') + 1
+    call s:set_titleline(s:title,0)
     call append(line('$'),'')
     let b:startline = line('$')
 
@@ -34,14 +34,14 @@ function! s:create_board()
     endfor
     call append(line('$'),labelrow)
 
-    let botline = "╰" .. repeat("───┴",ncol-1) .. "───╯"
+    let botline = "└" .. repeat("───┴",ncol-1) .. "───┘"
     call append(line('$'),botline)
 
     " set cursor initial postion
     let [iline,ivcol] = s:get_window_pos_from_board_pos((b:nrow-1)/2,(b:ncol-1)/2)
     let bytescol = strlen(strcharpart(getline(iline),0,ivcol))
     call cursor(iline,bytescol)
-    
+
     " add help line
     call append(line('$'),'')
     let b:helpline = line('$') + 1
@@ -50,15 +50,16 @@ function! s:create_board()
     setlocal nomodifiable
 endfunction
 
-function! s:update_title(text,score)
+function! s:set_titleline(text,score)
     let title = printf("%s  %s%d  %s",s:logo,a:text,a:score,s:logo)
     let titlewidth = strdisplaywidth(title)
     if titlewidth >= b:boardwidth
         call setline(b:titleline,title)
     else
         let rest = b:boardwidth - titlewidth
-        let fills = repeat(s:logo,rest/2)
-        call setline(b:titleline,fills..title..fills)
+        let leftfills = repeat(s:logo,rest/2)
+        let rightfills = repeat(s:logo,rest/2+rest%2)
+        call setline(b:titleline,leftfills..title..rightfills)
     endif
 endfunction
 
@@ -66,12 +67,13 @@ function! s:set_helpline()
     let fillchar = '-'
     let helptext = printf("%s  %s  %s",fillchar,s:help,fillchar)
     let helpwidth = strdisplaywidth(helptext)
-    if helpwidth > b:boardwidth
+    if helpwidth >= b:boardwidth
         call setline(b:helpline,helptext)
     else
         let rest = b:boardwidth - helpwidth
-        let fills = repeat(fillchar,rest/2)
-        call setline(b:helpline,fills..helptext..fills)
+        let leftfills = repeat(fillchar,rest/2)
+        let rightfills = repeat(fillchar,rest/2+rest%2)
+        call setline(b:helpline,leftfills..helptext..rightfills)
     endif
 endfunction
 
@@ -106,14 +108,16 @@ function! s:get_rand_int(Low, High) abort
     return l:milisec % (a:High - a:Low + 1) + a:Low
 endfunction
 
-function! s:create_mine()
+function! s:create_mine(grow,gcol)
+    " (grow, gcol) is the first sweep cell , should be safe on the first try
+    let safenum = a:grow * b:ncol + a:gcol
 	let mines = []
 	let all = b:nrow * b:ncol
     " there may be same numbers in randint generation , so generated mines may less than b:nmine
     " use 1.3 as factor to increase the random num
 	for _ in range(float2nr(b:nmine*1.3))
         let randnum = s:get_rand_int(0,all-1)
-        if index(mines,randnum) < 0
+        if index(mines,randnum) < 0 && randnum != safenum
             call add(mines,randnum)
         endif
 	endfor
@@ -123,25 +127,27 @@ function! s:create_mine()
     " reset the real b:nmine
     let b:nmine = len(mines)
     " echom "real mines = "..b:nmine
-	for i in range(b:nrow)
+	for arow in range(b:nrow)
         call add(b:board,[])
-		for j in range(b:ncol)
-            if index(mines,i*b:ncol+j)>=0
-                call add(b:board[i],-1)
+		for acol in range(b:ncol)
+            if index(mines,arow*b:ncol+acol)>=0
+                call add(b:board[arow],-1)
             else
-                call add(b:board[i],0)
+                call add(b:board[arow],0)
             endif
         endfor
     endfor
 endfunction
 
 function! s:count_mine()
-	for i in range(b:nrow)
-		for j in range(b:ncol)
-            if b:board[i][j]==0
+	for grow in range(b:nrow)
+		for gcol in range(b:ncol)
+            if b:board[grow][gcol]==0
                 for [x,y] in [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
-                    if i+y>=0 && i+y<b:nrow && j+x>=0 && j+x<b:ncol && b:board[i+y][j+x]==-1
-                        let b:board[i][j] += 1
+                    let arow = grow + y 
+                    let acol = gcol + x
+                    if arow>=0 && arow<b:nrow && acol>=0 && acol<b:ncol && b:board[arow][acol]==-1
+                        let b:board[grow][gcol] += 1
                     endif
                 endfor
             endif
@@ -165,6 +171,10 @@ function! s:reveal_cell(flag)
     let wline = line('.')
     let wvcol = virtcol('.')
     let [grow,gcol] = s:get_board_pos_from_window_pos(wline,wvcol)
+    if b:score == 0
+        call s:create_mine(grow,gcol)
+        call s:count_mine()
+    endif
     if grow !=-1 && gcol != -1 
         setlocal modifiable
         let label = b:board[grow][gcol]
@@ -180,7 +190,7 @@ function! s:reveal_cell(flag)
                 call s:replace_cell(grow,gcol,' * ')
                 if b:start == 1
                     " call setline(1,printf("%s   %s   %s%d",s:logo,s:lose,s:result,b:score))
-                    call s:update_title(s:lose,b:score)
+                    call s:set_titleline(s:lose,b:score)
                     let b:start = 0
                 endif
             elseif label == 0
@@ -206,11 +216,11 @@ function! s:reveal_cell(flag)
             if b:start== 1 
                 if b:score == b:nrow*b:ncol-b:nmine
                     " call setline(1,printf("%s   %s   %s%d",s:logo,s:win,s:result,b:score))
-                    call s:update_title(s:win,b:score)
+                    call s:set_titleline(s:win,b:score)
                     let b:start=0
                 else
                     " call setline(1,printf("%s   %s   %s%d",s:logo,s:title,s:result,b:score))
-                    call s:update_title(s:title,b:score)
+                    call s:set_titleline(s:title,b:score)
                 endif
             endif 
         endif
@@ -218,17 +228,15 @@ function! s:reveal_cell(flag)
     endif
 endfunction
 
-function! s:reveal_blank(l,c)
-    let i=a:l
-    let j=a:c
+function! s:reveal_blank(grow,gcol)
     for [x,y] in [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
-        let ni = i+y
-        let nj = j+x
-        if ni>=0 && ni<b:nrow && nj>=0 && nj<b:ncol
-            if index(b:blanks,[ni,nj]) == -1
-                call add(b:blanks,[ni,nj])
-                if b:board[ni][nj]==0
-                    call s:reveal_blank(ni,nj)
+        let arow = a:grow+y
+        let acol = a:gcol+x
+        if arow>=0 && arow<b:nrow && acol>=0 && acol<b:ncol
+            if index(b:blanks,[arow,acol]) == -1
+                call add(b:blanks,[arow,acol])
+                if b:board[arow][acol]==0
+                    call s:reveal_blank(arow,acol)
                 endif
             endif
         endif
@@ -239,20 +247,22 @@ function! s:new_game()
     let b:board = []
     let b:blanks = []  "use dict may be better
     let b:score = 0
-    call s:create_mine()
-    call s:count_mine()
     call s:create_board()
     let b:start = 1
 endfunction
 
 " for test
 function! PrintBoard()
-    setlocal modifiable
-    call setline(line('$')+1,"Show Board")
-    for i in range(b:nrow)
-        call append(line('$'),join(b:board[i],'.'))
-    endfor
-    setlocal nomodifiable
+    if b:score == 0
+        echom "Reveal a cell, then call the function."
+    else
+        setlocal modifiable
+        call setline(line('$')+1,"Show Board")
+        for arow in range(b:nrow)
+            call append(line('$'),join(b:board[arow],'.'))
+        endfor
+        setlocal nomodifiable
+    endif
 endfunction
 
 function! s:move_right() abort
@@ -349,9 +359,10 @@ function s:toggle_help()
         call append(line('$'),s:help3)
         call append(line('$'),s:help4)
     else
-        normal! ma
-        normal! G_d3k
-        normal! `a
+        silent! normal! ma
+        call cursor(b:helpline+1,1)
+        silent! normal! dG
+        silent! normal! `a
     endif
     set nomodifiable
 endfunction
@@ -363,12 +374,12 @@ function! s:start_game()
     let b:nmine = s:nmine 
     call s:new_game()
     " echom b:board
-    " should avoid click mine in first try , todo
 endfunction
 
 function! s:init_setting()
     setlocal buftype=nofile bufhidden=wipe nobuflisted nomodifiable nolist noswapfile 
-             \ nowrap nocursorline nocursorcolumn nospell
+             \ nowrap nocursorline nocursorcolumn nospell maxfuncdepth=199
+             \ encoding=utf8 noautoindent nosmartindent t_Co=256 mouse=a
     setfiletype mineswp
     nnoremap <silent> <buffer> <2-leftmouse> :call <SID>reveal_cell(0)<cr>
     nnoremap <silent> <buffer> <rightmouse> :call <SID>reveal_cell(1)<cr>
@@ -400,7 +411,7 @@ function! mineswp#start(...) abort
         let s:nrow = 24
         let s:ncol = 24
         let s:nmine = 99
-    elseif a:0 >= 2 && a:1 =~ '\d\+' && a:2 =~ '\d\+' && a:1 >= 1 && a:1 <= 50 && a:2 >= 1 && a:2 <= 50
+    elseif a:0 >= 2 && a:1 =~ '\d\+' && a:2 =~ '\d\+' && a:1 >= 1 && a:1 <= 30 && a:2 >= 1 && a:2 <= 30
         let s:nrow = str2nr(a:1)
         let s:ncol = str2nr(a:2)
         let s:nmine = float2nr(s:nrow * s:ncol * 0.15)
@@ -421,8 +432,10 @@ function! mineswp#start(...) abort
         elseif winloc ==? '-e'
             enew    " current window
         else
-            new     " default
+            vnew     " default
         endif
+    else
+        vnew    " default
     endif
     call s:start_game()
 endfunction
