@@ -2,10 +2,9 @@
 mine sweeping game in vim and neovim
 
 ## ScreenShot
-
-<img src="https://user-images.githubusercontent.com/13008913/111631101-fe858080-882d-11eb-9484-baa544087f20.png" width = "60%" />
+![screenshot](https://user-images.githubusercontent.com/13008913/111640012-bcad0800-8836-11eb-85c3-bf20af90c1ba.png)
 -
-<img src="https://user-images.githubusercontent.com/13008913/111631149-09401580-882e-11eb-8a99-4fde0197c892.png" width = "60%" />
+<img src="https://user-images.githubusercontent.com/13008913/111631101-fe858080-882d-11eb-9484-baa544087f20.png" width = "45%" />     <img src="https://user-images.githubusercontent.com/13008913/111631149-09401580-882e-11eb-8a99-4fde0197c892.png" width = "45%" />
 
 
 ## Installation
