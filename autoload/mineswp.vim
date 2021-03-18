@@ -402,23 +402,23 @@ function! mineswp#start(...) abort
     if a:0 >=1 && a:1 ==? "easy"
         let s:nrow = 9
         let s:ncol = 9
-        let s:nmine = 10
+        let s:nmine = 11
     elseif a:0 >=1 && a:1 ==? "medium"
         let s:nrow = 16
         let s:ncol = 16
-        let s:nmine = 40
+        let s:nmine = 42
     elseif a:0 >=1 && a:1 ==? "hard"
         let s:nrow = 24
         let s:ncol = 24
-        let s:nmine = 99
+        let s:nmine = 102
     elseif a:0 >= 2 && a:1 =~ '\d\+' && a:2 =~ '\d\+' && a:1 >= 1 && a:1 <= 30 && a:2 >= 1 && a:2 <= 30
         let s:nrow = str2nr(a:1)
         let s:ncol = str2nr(a:2)
-        let s:nmine = float2nr(s:nrow * s:ncol * 0.15)
+        let s:nmine = float2nr(s:nrow * s:ncol * 0.18)
     else 
         let s:nrow = 12
         let s:ncol = 20
-        let s:nmine = float2nr(s:nrow * s:ncol * 0.15)
+        let s:nmine = float2nr(s:nrow * s:ncol * 0.18)
     endif
 
     if a:0 != 0
