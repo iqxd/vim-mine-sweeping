@@ -1,11 +1,12 @@
 # vim-mine-sweeping
-<font size=4>mine sweeping game in vim and neovim</font>
+mine sweeping game in vim and neovim
 
 ## ScreenShot
 
-![screenshotdark](https://user-images.githubusercontent.com/13008913/111631101-fe858080-882d-11eb-9484-baa544087f20.png =500x500)
----
-![screenshotlight](https://user-images.githubusercontent.com/13008913/111631149-09401580-882e-11eb-8a99-4fde0197c892.png =500x500)
+<img src="https://user-images.githubusercontent.com/13008913/111631101-fe858080-882d-11eb-9484-baa544087f20.png" width = "60%" />
+-
+<img src="https://user-images.githubusercontent.com/13008913/111631149-09401580-882e-11eb-8a99-4fde0197c892.png" width = "60%" />
+
 
 ## Installation
 ```vimscript
@@ -41,6 +42,6 @@ nnoremap <F12> :MineSweep medium -t<cr>
 ```
 
 ---
-<font size=4>*Enjoy!*  :)</font>
+**Enjoy!  :)**
 
 
