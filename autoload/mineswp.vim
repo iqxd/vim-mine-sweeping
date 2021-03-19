@@ -103,24 +103,48 @@ function! s:get_window_pos_from_board_pos(grow,gcol)
     return [wline,wvcol]
 endfunction
 
-function! s:get_rand_int(Low, High) abort
-    let l:milisec = str2nr(matchstr(reltimestr(reltime()), '\v\.\zs\d+'))
-    return l:milisec % (a:High - a:Low + 1) + a:Low
+function! s:get_rand_numbers(low, high, numcount,skipnum) abort
+    let numbers = {}
+    let numrange = a:high-a:low+1
+    if exists("*rand")
+        let seed = srand()
+        for _ in range(a:numcount)
+            let randnum = rand(seed) % numrange + a:low 
+            let numbers[randnum] = 1
+        endfor
+    elseif has("nvim")
+        call luaeval('math.randomseed(os.time())')
+        for _ in range(a:numcount)
+            let randnum = luaeval(printf("math.random(%d,%d)",a:low,a:high)) 
+            let numbers[randnum] = 1
+        endfor
+    else
+        for _ in range(a:numcount)
+            let milisec = str2nr(matchstr(reltimestr(reltime()), '\v\.\zs\d+'))
+            let randnum = milisec % numrange + a:low 
+            let numbers[randnum] = 1
+        endfor
+    endif
+    if has_key(numbers,a:skipnum)
+        unlet numbers[a:skipnum]
+    endif
+    let n = []
+    for k in keys(numbers)
+        call add(n,str2nr(k))
+    endfor
+    " echom n
+    return n
 endfunction
 
 function! s:create_mine(grow,gcol)
     " (grow, gcol) is the first sweep cell , should be safe on the first try
     let safenum = a:grow * b:ncol + a:gcol
-	let mines = []
 	let all = b:nrow * b:ncol
     " there may be same numbers in randint generation , so generated mines may less than b:nmine
     " use 1.3 as factor to increase the random num
-	for _ in range(float2nr(b:nmine*1.3))
-        let randnum = s:get_rand_int(0,all-1)
-        if index(mines,randnum) < 0 && randnum != safenum
-            call add(mines,randnum)
-        endif
-	endfor
+    let nums_count = float2nr(b:nmine*1.3)
+    let mines = s:get_rand_numbers(0,all-1,nums_count,safenum)
+
     let mines = mines[:b:nmine-1]
     " echom "init mines = "..b:nmine
 
@@ -128,12 +152,11 @@ function! s:create_mine(grow,gcol)
     let b:nmine = len(mines)
     " echom "real mines = "..b:nmine
 	for arow in range(b:nrow)
-        call add(b:board,[])
 		for acol in range(b:ncol)
             if index(mines,arow*b:ncol+acol)>=0
-                call add(b:board[arow],-1)
+                let b:board[arow..' '..acol] = -1
             else
-                call add(b:board[arow],0)
+                let b:board[arow..' '..acol] = 0
             endif
         endfor
     endfor
@@ -142,12 +165,12 @@ endfunction
 function! s:count_mine()
 	for grow in range(b:nrow)
 		for gcol in range(b:ncol)
-            if b:board[grow][gcol]==0
+            if b:board[grow .. ' ' ..gcol]==0
                 for [x,y] in [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
                     let arow = grow + y 
                     let acol = gcol + x
-                    if arow>=0 && arow<b:nrow && acol>=0 && acol<b:ncol && b:board[arow][acol]==-1
-                        let b:board[grow][gcol] += 1
+                    if arow>=0 && arow<b:nrow && acol>=0 && acol<b:ncol && b:board[arow..' '..acol]==-1
+                        let b:board[grow..' '..gcol] += 1
                     endif
                 endfor
             endif
@@ -171,13 +194,13 @@ function! s:reveal_cell(flag)
     let wline = line('.')
     let wvcol = virtcol('.')
     let [grow,gcol] = s:get_board_pos_from_window_pos(wline,wvcol)
-    if b:score == 0
-        call s:create_mine(grow,gcol)
-        call s:count_mine()
-    endif
     if grow !=-1 && gcol != -1 
         setlocal modifiable
-        let label = b:board[grow][gcol]
+        if b:score == 0
+            call s:create_mine(grow,gcol)
+            call s:count_mine()
+        endif
+        let label = b:board[grow..' '..gcol]
         let curcell = s:get_cell(grow,gcol)
         if a:flag == 1
             if curcell == '   '
@@ -196,10 +219,13 @@ function! s:reveal_cell(flag)
             elseif label == 0
                 call s:replace_cell(grow,gcol,' - ')
                 let b:score += 1
-                call add(b:blanks,[grow,gcol])
+                let b:blanks[grow..' '..gcol] = 1
                 call s:reveal_blank(grow,gcol)
-                for [arow,acol] in b:blanks
-                    let alabel =b:board[arow][acol]
+                for rc in keys(b:blanks)
+                    let [arow,acol] = split(rc)
+                    let arow = str2nr(arow)
+                    let acol = str2nr(acol)
+                    let alabel =b:board[arow..' '..acol]
                     let anewcell = alabel == 0 ? ' - ' : ' '..alabel..' '
                     let acurcell = s:get_cell(arow,acol)
                     if acurcell == '   ' || acurcell == ' + '
@@ -207,7 +233,7 @@ function! s:reveal_cell(flag)
                         let b:score += 1
                     endif
                 endfor
-                let b:blanks = []
+                let b:blanks = {}
             else
                 let newcell = ' '..label..' '
                 call s:replace_cell(grow,gcol,newcell)
@@ -233,9 +259,9 @@ function! s:reveal_blank(grow,gcol)
         let arow = a:grow+y
         let acol = a:gcol+x
         if arow>=0 && arow<b:nrow && acol>=0 && acol<b:ncol
-            if index(b:blanks,[arow,acol]) == -1
-                call add(b:blanks,[arow,acol])
-                if b:board[arow][acol]==0
+            if !has_key(b:blanks,arow..' '..acol)
+                let b:blanks[arow..' '..acol] = 1
+                if b:board[arow..' '..acol]==0
                     call s:reveal_blank(arow,acol)
                 endif
             endif
@@ -244,8 +270,8 @@ function! s:reveal_blank(grow,gcol)
 endfunction
 
 function! s:new_game()
-    let b:board = []
-    let b:blanks = []  "use dict may be better
+    let b:board = {}
+    let b:blanks = {}
     let b:score = 0
     call s:create_board()
     let b:start = 1
@@ -257,9 +283,20 @@ function! PrintBoard()
         echom "Reveal a cell, then call the function."
     else
         setlocal modifiable
-        call setline(line('$')+1,"Show Board")
         for arow in range(b:nrow)
-            call append(line('$'),join(b:board[arow],'.'))
+            let linetext = []
+            for acol in range(b:ncol)
+                let label = b:board[arow..' '..acol]
+                if label == 0 
+                    let label = '-'
+                elseif label == -1
+                    let label = '*'
+                else
+                    let label = string(label)
+                endif
+                call add(linetext,printf("%3s",label))
+            endfor
+            call append('$',join(linetext))
         endfor
         setlocal nomodifiable
     endif
@@ -352,7 +389,7 @@ function! s:move_up() abort
 endfunction
 
 function s:toggle_help()
-    set modifiable
+    setlocal modifiable
     if line('$') == b:helpline
         call append(line('$'),s:help1)
         call append(line('$'),s:help2)
@@ -364,7 +401,7 @@ function s:toggle_help()
         silent! normal! dG
         silent! normal! `a
     endif
-    set nomodifiable
+    setlocal nomodifiable
 endfunction
 
 function! s:start_game() 
