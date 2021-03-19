@@ -24,7 +24,7 @@ Command `:MineSweep` can be called with following arugments:
 * `easy`  9 x 9 board
 * `medium`  16 x 16 board
 * `hard`  24 x 24 board
-* `row col` user defined row x col Board
+* `row col` user defined row x col board
 * `-e` create board in current window
 * `-n` create board in new split window
 * `-v` create board in new vsplit window
