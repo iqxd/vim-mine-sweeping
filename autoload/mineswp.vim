@@ -82,14 +82,21 @@ function! s:get_board_pos_from_window_pos(wline,wvcol)
     let loffset =  (a:wline - b:startline) % 2 
     if loffset == 0
         let grow = (a:wline- b:startline) / 2 - 1
+        if grow >= b:nrow
+            return [-1,-1]
+        endif
     else 
         " screen pos on gird line not in cell
         return [-1,-1]
     endif
     let voffset = (a:wvcol - 1)%4
     if voffset > 0 
-        let l:gcol = (a:wvcol-1)/4
-        return [grow,gcol]
+        let gcol = (a:wvcol-1)/4
+        if gcol >= b:ncol
+            return [-1,-1]
+        else
+            return [grow,gcol]
+        endif
     else 
         " screen pos on gird line not in cell
         return [-1,-1] 
@@ -294,7 +301,7 @@ function! PrintBoard()
                 else
                     let label = string(label)
                 endif
-                call add(linetext,printf("%3s",label))
+                call add(linetext," "..label.." ")
             endfor
             call append('$',join(linetext))
         endfor
