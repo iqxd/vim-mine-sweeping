@@ -16,7 +16,9 @@ Plug 'iqxd/vim-mine-sweeping'
 * Launch `Vim Mine Sweeping` with command `:MineSweep`
 * Press <kbd>h</kbd>, <kbd>j</kbd>, <kbd>k</kbd>, <kbd>l</kbd> to move between cells
 * Press <kbd>c</kbd> to reveal a cell, <kbd>f</kbd> to add flag on a cell
-* Press <kbd>n</kbd> <kbd>g</kbd> to start a new game, <kbd>?</kbd> to toggle help
+* Press <kbd>n</kbd> <kbd>g</kbd> to start a new game
+* Press <kbd>p</kbd> <kbd>b</kbd> to print all mines and numbers in board
+* Press <kbd>?</kbd> to toggle help
 
 ## Options
 Command `:MineSweep` can be called with following arugments:

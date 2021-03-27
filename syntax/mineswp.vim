@@ -86,7 +86,7 @@ syn match HelpLine '\v\-.*Help.*\-'
 hi link HelpLine HelpLabel
 syn match GameAction '\v\[.+\]'
 hi link GameAction ActionName
-syn keyword KeyMap h j k l c f ng
+syn keyword KeyMap h j k l c f ng pb
 hi link KeyMap ActionKey
 syn match SKeyMap '←'
 syn match SKeyMap '↓'

@@ -7,6 +7,7 @@ let s:help1 = "[Move]    : h j k l or <left> <down> <up> <right>"
 let s:help2 = '[Reveal]  : c or <2-leftmouse>'
 let s:help3 = '[Flag]    : f or <rightmouse>'
 let s:help4 = '[NewGame] : ng'
+let s:help4 = '[PrintBoard] : pb'
 
 function! s:create_board()
     setlocal modifiable
@@ -284,31 +285,6 @@ function! s:new_game()
     let b:start = 1
 endfunction
 
-" for test
-function! PrintBoard()
-    if b:score == 0
-        echom "Reveal a cell, then call the function."
-    else
-        setlocal modifiable
-        for arow in range(b:nrow)
-            let linetext = []
-            for acol in range(b:ncol)
-                let label = b:board[arow..' '..acol]
-                if label == 0 
-                    let label = '-'
-                elseif label == -1
-                    let label = '*'
-                else
-                    let label = string(label)
-                endif
-                call add(linetext," "..label.." ")
-            endfor
-            call append('$',join(linetext))
-        endfor
-        setlocal nomodifiable
-    endif
-endfunction
-
 function! s:move_right() abort
     let curvcol = virtcol('.')
     let [grow,gcol] = s:get_board_pos_from_window_pos(line('.'),curvcol) 
@@ -411,6 +387,31 @@ function s:toggle_help()
     setlocal nomodifiable
 endfunction
 
+" for test
+function! s:print_board()
+    if b:score == 0
+        echom "Reveal a cell before print the board"
+    else
+        setlocal modifiable
+        for arow in range(b:nrow)
+            let linetext = []
+            for acol in range(b:ncol)
+                let label = b:board[arow..' '..acol]
+                if label == 0 
+                    let label = '-'
+                elseif label == -1
+                    let label = '*'
+                else
+                    let label = string(label)
+                endif
+                call add(linetext," "..label.." ")
+            endfor
+            call append('$',join(linetext))
+        endfor
+        setlocal nomodifiable
+    endif
+endfunction
+
 function! s:start_game() 
     call s:init_setting()
     let b:nrow = s:nrow
@@ -431,6 +432,7 @@ function! s:init_setting()
     nnoremap <silent> <buffer> f :call <SID>reveal_cell(1)<cr>
     nnoremap <silent> <buffer> ng :call <SID>new_game()<cr>
     nnoremap <silent> <buffer> ? :call <SID>toggle_help()<cr>
+    nnoremap <silent> <buffer> pb :call <SID>print_board()<cr>
 
     nnoremap <silent> <buffer> <expr> h <SID>move_left() 
     nnoremap <silent> <buffer> <expr> l <SID>move_right()
