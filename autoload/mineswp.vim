@@ -7,7 +7,7 @@ let s:help1 = "[Move]    : h j k l or <left> <down> <up> <right>"
 let s:help2 = '[Reveal]  : c or <2-leftmouse>'
 let s:help3 = '[Flag]    : f or <rightmouse>'
 let s:help4 = '[NewGame] : ng'
-let s:help4 = '[PrintBoard] : pb'
+let s:help5 = '[PrintBoard] : pb'
 
 function! s:create_board()
     setlocal modifiable
@@ -378,6 +378,7 @@ function s:toggle_help()
         call append(line('$'),s:help2)
         call append(line('$'),s:help3)
         call append(line('$'),s:help4)
+        call append(line('$'),s:help5)
     else
         silent! normal! ma
         call cursor(b:helpline+1,1)
