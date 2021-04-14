@@ -3,7 +3,7 @@ let s:title = 'Vim Mine Sweeping  Score:'
 let s:win   = 'You Won The Game!  Score:'
 let s:lose  = 'You Lost The Game  Score:'
 let s:help  = 'Toggle Help : ?'
-let s:help1 = "[Move]    : h j k l or <left> <down> <up> <right>"
+let s:help1 = "[Move]    : h j k l or ← ↓ ↑ →"
 let s:help2 = '[Reveal]  : c or <2-leftmouse>'
 let s:help3 = '[Flag]    : f or <rightmouse>'
 let s:help4 = '[NewGame] : ng'
@@ -478,6 +478,14 @@ function! mineswp#start(...) abort
             tabnew  " tabpage
         elseif winloc ==? '-e'
             enew    " current window
+        elseif winloc ==? '-f' && has("nvim")
+            " float window
+            let fw_height = s:nrow*2+7
+            let fw_width = s:ncol*4+1
+            if fw_width < 33
+               let fw_width = 33
+            endif
+            call s:open_float_win(fw_width,fw_height)
         else
             vnew     " default
         endif
@@ -485,5 +493,25 @@ function! mineswp#start(...) abort
         vnew    " default
     endif
     call s:start_game()
+endfunction
+
+function! s:open_float_win(fwin_width,fwin_height)
+    let height = a:fwin_height
+    let row = float2nr((&lines -2 - height) / 2)
+    let width = a:fwin_width
+    let col = float2nr((&columns - width) / 2)
+
+    let opts = {
+      \ 'relative': 'editor',
+      \ 'style': 'minimal',
+      \ 'width': width,
+      \ 'height': height,
+      \ 'col': col,
+      \ 'row': row,
+      \ }
+
+    let buf = nvim_create_buf(v:false, v:true)
+    let win = nvim_open_win(buf, v:true, opts)
+    let b:fwin = win
 endfunction
 
