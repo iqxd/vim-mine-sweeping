@@ -111,7 +111,7 @@ function! s:get_window_pos_from_board_pos(grow,gcol)
     return [wline,wvcol]
 endfunction
 
-function! s:get_rand_numbers(low, high, numcount,skipnum) abort
+function! s:get_rand_numbers(low, high, numcount,skipnums) abort
     let numbers = {}
     let numrange = a:high-a:low+1
     if exists("*rand")
@@ -133,9 +133,11 @@ function! s:get_rand_numbers(low, high, numcount,skipnum) abort
             let numbers[randnum] = 1
         endfor
     endif
-    if has_key(numbers,a:skipnum)
-        unlet numbers[a:skipnum]
-    endif
+    for skipnum in a:skipnums
+        if has_key(numbers,skipnum)
+            unlet numbers[skipnum]
+        endif
+    endfor
     let n = []
     for k in keys(numbers)
         call add(n,str2nr(k))
@@ -146,12 +148,22 @@ endfunction
 
 function! s:create_mine(grow,gcol)
     " (grow, gcol) is the first sweep cell , should be safe on the first try
-    let safenum = a:grow * b:ncol + a:gcol
+    " for easier start in early game , first try is better to be emtpy cell (0), 
+    " like windows minesweeper does
+    let safenums = []
+    for [x,y] in [[0,0],[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
+        let srow = a:grow + y 
+        let scol = a:gcol + x
+        if srow>=0 && srow<b:nrow && scol>=0 && scol<b:ncol
+            call add(safenums,srow * b:ncol + scol)
+        endif
+    endfor
+
 	let all = b:nrow * b:ncol
     " there may be same numbers in randint generation , so generated mines may less than b:nmine
     " use 1.3 as factor to increase the random num
     let nums_count = float2nr(b:nmine*1.3)
-    let mines = s:get_rand_numbers(0,all-1,nums_count,safenum)
+    let mines = s:get_rand_numbers(0,all-1,nums_count,safenums)
 
     let mines = mines[:b:nmine-1]
     " echom "init mines = "..b:nmine
