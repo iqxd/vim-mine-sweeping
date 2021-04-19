@@ -19,6 +19,7 @@ Plug 'iqxd/vim-mine-sweeping'
 * Press <kbd>n</kbd> <kbd>g</kbd> to start a new game
 * Press <kbd>p</kbd> <kbd>b</kbd> to print all mines and numbers in board
 * Press <kbd>?</kbd> to toggle help
+* Press <kbd>Z</kbd> <kbd>Z</kbd> to exit current game
 
 ## Options
 Command `:MineSweep` can be called with following arugments:
@@ -31,6 +32,7 @@ Command `:MineSweep` can be called with following arugments:
 * `-n` create board in new split window
 * `-v` create board in new vsplit window
 * `-t` create board in new tabpage
+* `-f` create board in new floating window (neovim only)
 
 The default `:MineSweep` are equal to command with arguments like:
 > `:MineSweep` `12 20` `-v`
