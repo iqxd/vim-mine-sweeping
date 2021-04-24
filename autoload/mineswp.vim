@@ -55,6 +55,13 @@ function! s:set_titleline(text,score)
     let title = printf("%s  %s%d/%d  %s",s:logo,a:text,a:score,b:total,s:logo)
     let titlewidth = strdisplaywidth(title)
     if titlewidth >= b:boardwidth
+        if exists("b:fwin") 
+            if (b:total >=10 && b:total<100 && a:score < 10 ) || (b:total>=100 && a:score >=10 && a:score <100)
+                let title = title[:-2] .. ' ' .. s:logo
+            elseif (b:total >=100 && a:score < 10 )
+                let title = s:logo..' '..title[1:-2]..' '..s:logo
+            endif
+        endif
         call setline(b:titleline,title)
     else
         let rest = b:boardwidth - titlewidth
