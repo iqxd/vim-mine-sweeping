@@ -52,7 +52,7 @@ function! s:create_board()
 endfunction
 
 function! s:set_titleline(text,score)
-    let title = printf("%s  %s%d  %s",s:logo,a:text,a:score,s:logo)
+    let title = printf("%s  %s%d/%d  %s",s:logo,a:text,a:score,b:total,s:logo)
     let titlewidth = strdisplaywidth(title)
     if titlewidth >= b:boardwidth
         call setline(b:titleline,title)
@@ -159,11 +159,10 @@ function! s:create_mine(grow,gcol)
         endif
     endfor
 
-	let all = b:nrow * b:ncol
     " there may be same numbers in randint generation , so generated mines may less than b:nmine
     " use 1.3 as factor to increase the random num
     let nums_count = float2nr(b:nmine*1.3)
-    let mines = s:get_rand_numbers(0,all-1,nums_count,safenums)
+    let mines = s:get_rand_numbers(0,b:total-1,nums_count,safenums)
 
     let mines = mines[:b:nmine-1]
     " echom "init mines = "..b:nmine
@@ -260,9 +259,9 @@ function! s:reveal_cell(flag)
                 let b:score += 1
             endif
             if b:start== 1 
-                if b:score == b:nrow*b:ncol-b:nmine
+                if b:score == b:total-b:nmine
                     " call setline(1,printf("%s   %s   %s%d",s:logo,s:win,s:result,b:score))
-                    call s:set_titleline(s:win,b:score)
+                    call s:set_titleline(s:win,b:total)
                     let b:start=0
                 else
                     " call setline(1,printf("%s   %s   %s%d",s:logo,s:title,s:result,b:score))
@@ -400,6 +399,27 @@ function s:toggle_help()
     setlocal nomodifiable
 endfunction
 
+function! s:open_float_win(fwin_width,fwin_height)
+    let height = a:fwin_height
+    let row = float2nr((&lines -2 - height) / 2)
+    let width = a:fwin_width
+    let col = float2nr((&columns - width) / 2)
+
+    let opts = {
+      \ 'relative': 'editor',
+      \ 'style': 'minimal',
+      \ 'width': width,
+      \ 'height': height,
+      \ 'col': col,
+      \ 'row': row,
+      \ }
+
+    let buf = nvim_create_buf(v:false, v:true)
+    let win = nvim_open_win(buf, v:true, opts)
+    let b:fwin = win
+endfunction
+
+
 " for test
 function! s:print_board()
     if b:score == 0
@@ -430,6 +450,7 @@ function! s:start_game()
     let b:nrow = s:nrow
     let b:ncol = s:ncol
     let b:nmine = s:nmine 
+    let b:total = s:nrow * s:ncol
     call s:new_game()
     " echom b:board
 endfunction
@@ -494,8 +515,17 @@ function! mineswp#start(...) abort
             " float window
             let fw_height = s:nrow*2+7
             let fw_width = s:ncol*4+1
-            if fw_width < 33
-               let fw_width = 33
+            let fw_width_min = len(s:title)+6 
+            let total = s:nrow*s:ncol
+            if total < 10 
+                let fw_width_min += 3
+            elseif total < 100
+                let fw_width_min += 5
+            else
+                let fw_width_min += 7
+            endif
+            if fw_width < fw_width_min
+               let fw_width = fw_width_min
             endif
             call s:open_float_win(fw_width,fw_height)
         else
@@ -506,24 +536,3 @@ function! mineswp#start(...) abort
     endif
     call s:start_game()
 endfunction
-
-function! s:open_float_win(fwin_width,fwin_height)
-    let height = a:fwin_height
-    let row = float2nr((&lines -2 - height) / 2)
-    let width = a:fwin_width
-    let col = float2nr((&columns - width) / 2)
-
-    let opts = {
-      \ 'relative': 'editor',
-      \ 'style': 'minimal',
-      \ 'width': width,
-      \ 'height': height,
-      \ 'col': col,
-      \ 'row': row,
-      \ }
-
-    let buf = nvim_create_buf(v:false, v:true)
-    let win = nvim_open_win(buf, v:true, opts)
-    let b:fwin = win
-endfunction
-
