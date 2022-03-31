@@ -12,6 +12,11 @@ mine sweeping game in vim and neovim
 " vim-plug
 Plug 'iqxd/vim-mine-sweeping'
 ```
+```lua
+-- packer
+use 'iqxd/vim-mine-sweeping'
+```
+
 ## Usage
 * Launch `Vim Mine Sweeping` with command `:MineSweep`
 * Press <kbd>h</kbd>, <kbd>j</kbd>, <kbd>k</kbd>, <kbd>l</kbd> or `arrow key` to move between cells
