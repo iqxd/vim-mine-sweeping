@@ -419,6 +419,7 @@ function! s:open_float_win(fwin_width,fwin_height)
       \ 'height': height,
       \ 'col': col,
       \ 'row': row,
+      \ 'border' : 'single',
       \ }
 
     let buf = nvim_create_buf(v:false, v:true)
